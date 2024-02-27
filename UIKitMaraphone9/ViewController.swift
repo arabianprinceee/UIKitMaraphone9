@@ -8,17 +8,22 @@
 import UIKit
 
 class ViewController: UIViewController {
+    
+    private static let itemSize: CGSize = .init(width: 300, height: 400)
+    private static let itemSpacing: CGFloat = 16
 
     private lazy var collectionView: UICollectionView = {
         let layout = UICollectionViewFlowLayout()
         layout.scrollDirection = .horizontal
-        layout.itemSize = CGSizeMake(UIScreen.main.bounds.width - 32, 400)
+        layout.itemSize = Self.itemSize
+        layout.minimumLineSpacing = Self.itemSpacing
         let collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
         collectionView.translatesAutoresizingMaskIntoConstraints = false
         collectionView.showsHorizontalScrollIndicator = false
         collectionView.delegate = self
         collectionView.dataSource = self
         collectionView.register(UICollectionViewCell.self, forCellWithReuseIdentifier: "MyCell")
+        layout.sectionInset.left = collectionView.layoutMargins.left
         return collectionView
     }()
 
@@ -33,22 +38,24 @@ class ViewController: UIViewController {
         view.addSubview(collectionView)
         NSLayoutConstraint.activate([
             collectionView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+            collectionView.leftAnchor.constraint(equalTo: view.leftAnchor),
+            collectionView.rightAnchor.constraint(equalTo: view.rightAnchor),
             collectionView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor),
-            collectionView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            collectionView.trailingAnchor.constraint(equalTo: view.trailingAnchor)
         ])
     }
 
-//    func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
-//        if (scrollView == self.collectionView) {
-//                CGPoint currentCellOffset = self.collectionView.contentOffset;
-//                currentCellOffset.x += self.collectionView.frame.size.width / 2;
-//                NSIndexPath *indexPath = [self.collectionView indexPathForItemAtPoint:currentCellOffset];
-//                [self.collectionView scrollToItemAtIndexPath:indexPath
-//                                            atScrollPosition:UICollectionViewScrollPositionCenteredHorizontally
-//                                                    animated:YES];
-//            }
-//    }
+    func scrollViewWillEndDragging(
+        _ scrollView: UIScrollView,
+        withVelocity velocity: CGPoint,
+        targetContentOffset: UnsafeMutablePointer<CGPoint>
+    ) {
+        let itemWidth = Self.itemSize.width + Self.itemSpacing
+        let contentOffset = targetContentOffset.pointee.x + Self.itemSpacing
+        let itemToScroll = round(contentOffset / itemWidth)
+        
+        targetContentOffset.pointee = CGPoint(x: itemToScroll * itemWidth - scrollView.contentInset.left,
+                                              y: scrollView.contentInset.top)
+    }
 
 }
 
